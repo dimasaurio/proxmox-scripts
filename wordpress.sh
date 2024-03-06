@@ -3,6 +3,9 @@
 # Prompt for the LXC container ID
 read -p "Enter the LXC ID you want to use: " ctid
 
+# Prompt for the LXC container name
+read -p "Enter the name for the LXC container: " ctname
+
 # Determine the Ubuntu 22.04 template name
 template=$(pct template list | grep ubuntu-22.04 | awk '{print $1}')
 if [ -z "$template" ]; then
@@ -47,11 +50,11 @@ case $install_choice in
         ;;
 esac
 
-# Create the LXC container
+# Create the LXC container with the specified name
 if [ "$net_mode" == "dhcp" ]; then
-    pct create $ctid $template --hostname wordpress-container --cores $cores --memory $memory --net0 name=eth0,bridge=vmbr0,ip=dhcp
+    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --net0 name=eth0,bridge=vmbr0,ip=dhcp
 else
-    pct create $ctid $template --hostname wordpress-container --cores $cores --memory $memory --net0 name=eth0,bridge=vmbr0,ip=$ipv4,gw=$gw
+    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --net0 name=eth0,bridge=vmbr0,ip=$ipv4,gw=$gw
 fi
 
 # Start the container
