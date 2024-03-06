@@ -1,14 +1,20 @@
 #!/bin/bash
 
-# Ask for the LXC container ID
+# Prompt for the LXC container ID
 read -p "Enter the LXC ID you want to use: " ctid
 
 # Determine the Ubuntu 22.04 template name
-template=$(pct template list | grep ubuntu-22.04 | cut -d' ' -f1)
+template=$(pct template list | grep ubuntu-22.04 | awk '{print $1}')
 if [ -z "$template" ]; then
     echo "Ubuntu 22.04 template not found. Please download it first."
     exit 1
 fi
+
+# Prompt for database credentials
+read -p "Enter the WordPress database name: " wp_dbname
+read -p "Enter the WordPress database username: " wp_dbuser
+read -s -p "Enter the WordPress database password: " wp_dbpass
+echo
 
 # Installation type choice
 echo "Select installation type:"
@@ -60,18 +66,15 @@ pct exec $ctid -- apt-get update && apt-get upgrade -y
 # Install Nginx, PHP, and MySQL
 pct exec $ctid -- apt-get install nginx php-fpm php-mysql mysql-server -y
 
-# Secure MySQL installation (You should automate or manually handle this part as it requires interactive inputs)
-# pct exec $ctid -- mysql_secure_installation
-
-# Create a WordPress database and user
-pct exec $ctid -- mysql -e "CREATE DATABASE wordpress; CREATE USER 'wordpressuser'@'localhost' IDENTIFIED BY 'password'; GRANT ALL PRIVILEGES ON wordpress.* TO 'wordpressuser'@'localhost'; FLUSH PRIVILEGES;"
+# Create a WordPress database and user with the provided credentials
+pct exec $ctid -- mysql -e "CREATE DATABASE ${wp_dbname}; CREATE USER '${wp_dbuser}'@'localhost' IDENTIFIED BY '${wp_dbpass}'; GRANT ALL PRIVILEGES ON ${wp_dbname}.* TO '${wp_dbuser}'@'localhost'; FLUSH PRIVILEGES;"
 
 # Download and configure WordPress
 pct exec $ctid -- bash -c "wget https://wordpress.org/latest.tar.gz -O /tmp/wordpress.tar.gz && tar xzf /tmp/wordpress.tar.gz -C /var/www/html --strip-components=1 && chown -R www-data:www-data /var/www/html"
 pct exec $ctid -- bash -c "cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php"
-pct exec $ctid -- bash -c "sed -i 's/database_name_here/wordpress/g' /var/www/html/wp-config.php"
-pct exec $ctid -- bash -c "sed -i 's/username_here/wordpressuser/g' /var/www/html/wp-config.php"
-pct exec $ctid -- bash -c "sed -i 's/password_here/password/g' /var/www/html/wp-config.php"
+pct exec $ctid -- bash -c "sed -i 's/database_name_here/${wp_dbname}/g' /var/www/html/wp-config.php"
+pct exec $ctid -- bash -c "sed -i 's/username_here/${wp_dbuser}/g' /var/www/html/wp-config.php"
+pct exec $ctid -- bash -c "sed -i 's/password_here/${wp_dbpass}/g' /var/www/html/wp-config.php"
 
 # Configure Nginx for WordPress
 pct exec $ctid -- bash -c "echo 'server {
@@ -101,4 +104,4 @@ pct exec $ctid -- bash -c "ln -s /etc/nginx/sites-available/wordpress /etc/nginx
 pct exec $ctid -- bash -c "unlink /etc/nginx/sites-enabled/default"
 pct exec $ctid -- bash -c "systemctl restart nginx"
 
-echo "WordPress installation completed. Please navigate to your server IP to finish the WordPress setup. Remember to secure MySQL."
+echo "WordPress installation completed. Please navigate to your server IP to finish the WordPress setup."
