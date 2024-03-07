@@ -28,6 +28,3 @@ WantedBy=multi-user.target" | sudo tee /etc/systemd/system/node_exporter.service
 # Reload systemd, enable and start node_exporter service
 sudo systemctl daemon-reload
 sudo systemctl enable --now node_exporter.service
-
-# Optionally, check the status
-sudo systemctl status node_exporter.service
