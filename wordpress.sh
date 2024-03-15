@@ -11,10 +11,15 @@ fi
 read -p "Enter the name for the LXC container: " ctname
 
 # Determine the Ubuntu 22.04 template name
-template=$(pct template list | grep ubuntu-22.04 | awk '{print $1}')
+template=$(pct template list | grep ubuntu-22.04-standard_22.04-1_amd64.tar.gz | awk '{print $1}')
 if [ -z "$template" ]; then
-    echo "Ubuntu 22.04 template not found. Please download it first."
-    exit 1
+    echo "Ubuntu 22.04 template not found. Attempting to download it..."
+    pveam update && pveam download local ubuntu-22.04-standard_22.04-1_amd64.tar.gz
+    template=$(pct template list | grep ubuntu-22.04 | awk '{print $1}')
+    if [ -z "$template" ]; then
+        echo "Failed to download the Ubuntu 22.04 template. Please check your network or storage configuration."
+        exit 1
+    fi
 fi
 
 # Prompt for database credentials
