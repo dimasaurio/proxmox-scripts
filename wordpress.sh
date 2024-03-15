@@ -2,6 +2,10 @@
 
 # Prompt for the LXC container ID
 read -p "Enter the LXC ID you want to use: " ctid
+if ! [[ "$ctid" =~ ^[0-9]+$ ]]; then
+    echo "Error: LXC ID must be an integer."
+    exit 1
+fi
 
 # Prompt for the LXC container name
 read -p "Enter the name for the LXC container: " ctname
