@@ -62,9 +62,9 @@ esac
 
 # Create the LXC container with the specified name
 if [ "$net_mode" == "dhcp" ]; then
-    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --net0 name=eth0,bridge=vmbr0,ip=dhcp
+    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --net0 name=eth0,bridge=vmbr0,ip=dhcp --storage local-lvm
 else
-    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --net0 name=eth0,bridge=vmbr0,ip=$ipv4,gw=$gw
+    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --net0 name=eth0,bridge=vmbr0,ip=$ipv4,gw=$gw --storage local-lvm
 fi
 
 # Start the container
