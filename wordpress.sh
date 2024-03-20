@@ -11,12 +11,12 @@ fi
 read -p "Enter the name for the LXC container: " ctname
 
 # Check for the Ubuntu 22.04 template
-template=$(pveam list local | grep ubuntu-22.04-standard_22.04-1_amd64.tar.zst | awk '{print $2}')
+template=$(pveam list local | grep ubuntu-22.04-standard_22.04-1_amd64.tar.zst | awk '{print $1}')
 if [ -z "$template" ]; then
     echo "Ubuntu 22.04 template not found. Attempting to download it..."
     pveam update && pveam download local ubuntu-22.04-standard_22.04-1_amd64.tar.zst
     # Recheck for the template
-    template=$(pveam list local | grep ubuntu-22.04-standard_22.04-1_amd64.tar.zst | awk '{print $2}')
+    template=$(pveam list local | grep ubuntu-22.04-standard_22.04-1_amd64.tar.zst | awk '{print $1}')
     if [ -z "$template" ]; then
         echo "Failed to download the Ubuntu 22.04 template. Please check your network or storage configuration."
         exit 1
