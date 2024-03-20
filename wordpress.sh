@@ -10,6 +10,19 @@ fi
 # Prompt for the LXC container name
 read -p "Enter the name for the LXC container: " ctname
 
+while true; do
+    read -s -p "Enter the root password for the LXC container: " root_password
+    echo
+    read -s -p "Confirm the root password: " confirm_password
+    echo
+    if [ "$root_password" == "$confirm_password" ]; then
+        echo "Password confirmed."
+        break
+    else
+        echo "Passwords do not match. Please try again."
+    fi
+done
+
 # Check for the Ubuntu 22.04 template
 template=$(pveam list local | grep ubuntu-22.04-standard_22.04-1_amd64.tar.zst | awk '{print $1}')
 if [ -z "$template" ]; then
@@ -62,9 +75,9 @@ esac
 
 # Create the LXC container with the specified name
 if [ "$net_mode" == "dhcp" ]; then
-    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --rootfs local-lvm:${disk_size} --net0 name=eth0,bridge=vmbr0,ip=dhcp
+    pct create $ctid $template --hostname $ctname --password $root_password --cores $cores --memory $memory --rootfs local-lvm:${disk_size} --net0 name=eth0,bridge=vmbr0,ip=dhcp
 else
-    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --rootfs local-lvm:${disk_size} --net0 name=eth0,bridge=vmbr0,ip=$ipv4,gw=$gw
+    pct create $ctid $template --hostname $ctname --password $root_password --cores $cores --memory $memory --rootfs local-lvm:${disk_size} --net0 name=eth0,bridge=vmbr0,ip=$ipv4,gw=$gw
 fi
 
 # Start the container
