@@ -103,7 +103,7 @@ pct exec $ctid -- bash -c "echo 'server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php7.4-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.1-fpm.sock;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         include fastcgi_params;
     }
@@ -113,6 +113,7 @@ pct exec $ctid -- bash -c "echo 'server {
     }
 }' > /etc/nginx/sites-available/wordpress"
 
+pct exec $ctid -- bash -c "chown -R www-data:www-data /var/www/html"
 pct exec $ctid -- bash -c "ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled/"
 pct exec $ctid -- bash -c "unlink /etc/nginx/sites-enabled/default"
 pct exec $ctid -- bash -c "systemctl restart nginx"
