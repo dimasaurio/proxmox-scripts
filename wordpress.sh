@@ -38,14 +38,14 @@ read -p "Enter your choice (1 or 2): " install_choice
 case $install_choice in
     1)
         echo "Proceeding with Fast Installation..."
-        disk_size="25G"  # Default disk size
+        disk_size="25"  # Default disk size
         memory="2048"    # Default memory in MB
         cores="1"        # Default number of CPU cores
         net_mode="dhcp"  # Default network mode
         ;;
     2)
         echo "Proceeding with Customized Installation..."
-        read -p "Enter disk size (e.g., 25G): " disk_size
+        read -p "Enter disk size in G(e.g., 25): " disk_size
         read -p "Enter memory size in MB (e.g., 2048): " memory
         read -p "Enter number of CPU cores (e.g., 1): " cores
         read -p "Enter network mode (dhcp or static): " net_mode
@@ -62,9 +62,9 @@ esac
 
 # Create the LXC container with the specified name
 if [ "$net_mode" == "dhcp" ]; then
-    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --rootfs local-lvm,size=${disk_size} --net0 name=eth0,bridge=vmbr0,ip=dhcp
+    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --rootfs local-lvm:${disk_size} --net0 name=eth0,bridge=vmbr0,ip=dhcp
 else
-    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --rootfs local-lvm,size=${disk_size} --net0 name=eth0,bridge=vmbr0,ip=$ipv4,gw=$gw
+    pct create $ctid $template --hostname $ctname --cores $cores --memory $memory --rootfs local-lvm:${disk_size} --net0 name=eth0,bridge=vmbr0,ip=$ipv4,gw=$gw
 fi
 
 # Start the container
