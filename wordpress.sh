@@ -115,5 +115,6 @@ pct exec $ctid -- bash -c "echo 'server {
 pct exec $ctid -- bash -c "ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled/"
 pct exec $ctid -- bash -c "unlink /etc/nginx/sites-enabled/default"
 pct exec $ctid -- bash -c "systemctl restart nginx"
+ip=$(pct exec $ctid -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
-echo "WordPress installation completed. Please navigate to your server IP to finish the WordPress setup."
+echo "WordPress installation completed. Please navigate to http://$ip/index.php to finish the WordPress setup."
