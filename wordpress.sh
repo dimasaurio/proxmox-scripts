@@ -2,6 +2,7 @@
 
 # Prompt for the LXC container ID
 read -p "Enter the LXC ID you want to use: " ctid
+echo "You entered LXC ID: '$ctid'"
 if ! [[ "$ctid" =~ ^[0-9]+$ ]]; then
     echo "Error: LXC ID must be an integer."
     exit 1
@@ -130,5 +131,6 @@ pct exec $ctid -- bash -c "chown -R www-data:www-data /var/www/html"
 pct exec $ctid -- bash -c "ln -s /etc/nginx/sites-available/wordpress /etc/nginx/sites-enabled/"
 pct exec $ctid -- bash -c "unlink /etc/nginx/sites-enabled/default"
 pct exec $ctid -- bash -c "systemctl restart nginx"
+ip=$(pct exec $ctid -- ip -4 addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
 
-echo "WordPress installation completed. Please navigate to your server IP to finish the WordPress setup."
+echo "WordPress installation completed. Please navigate to http://$ip/index.php to finish the WordPress setup."
