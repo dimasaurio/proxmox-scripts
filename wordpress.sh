@@ -1,33 +1,34 @@
 #!/bin/bash
 
-# Check if LXC ID is set and is an integer
-if [[ -z "$LXC_ID" || ! "$LXC_ID" =~ ^[0-9]+$ ]]; then
+# Prompt for LXC ID if not set
+if [[ -z "$LXC_ID" ]]; then
+    read -p "Enter the LXC ID you want to use: " LXC_ID
+fi
+echo "You entered LXC ID: '$LXC_ID'"
+if ! [[ "$LXC_ID" =~ ^[0-9]+$ ]]; then
     echo "Error: LXC ID must be an integer."
     exit 1
 fi
 
-# Check if LXC container name is set
+# Prompt for LXC container name if not set
 if [ -z "$LXC_NAME" ]; then
-    echo "Error: LXC container name must be provided."
-    exit 1
+    read -p "Enter the name for the LXC container: " LXC_NAME
 fi
 
-# Check if root password is set
+# Prompt for root password if not set
 if [ -z "$ROOT_PASSWORD" ]; then
-    echo "Error: Root password must be provided."
-    exit 1
-fi
-
-# Check if WordPress database details are set
-if [ -z "$WP_DBNAME" ] || [ -z "$WP_DBUSER" ] || [ -z "$WP_DBPASS" ]; then
-    echo "Error: WordPress database details must be provided."
-    exit 1
-fi
-
-# Check if installation type is set
-if [ -z "$INSTALL_CHOICE" ]; then
-    echo "Error: Installation choice must be provided."
-    exit 1
+    while true; do
+        read -s -p "Enter the root password for the LXC container: " ROOT_PASSWORD
+        echo
+        read -s -p "Confirm the root password: " CONFIRM_PASSWORD
+        echo
+        if [ "$ROOT_PASSWORD" == "$CONFIRM_PASSWORD" ]; then
+            echo "Password confirmed."
+            break
+        else
+            echo "Passwords do not match. Please try again."
+        fi
+    done
 fi
 
 # Check for the Ubuntu 22.04 template
@@ -43,7 +44,26 @@ if [ -z "$template" ]; then
     fi
 fi
 
-# Installation type choice
+# Prompt for WordPress database details if not set
+if [ -z "$WP_DBNAME" ]; then
+    read -p "Enter the WordPress database name: " WP_DBNAME
+fi
+if [ -z "$WP_DBUSER" ]; then
+    read -p "Enter the WordPress database username: " WP_DBUSER
+fi
+if [ -z "$WP_DBPASS" ]; then
+    read -s -p "Enter the WordPress database password: " WP_DBPASS
+    echo
+fi
+
+# Prompt for installation type if not set
+if [ -z "$INSTALL_CHOICE" ]; then
+    echo "Select installation type:"
+    echo "1) Fast Installation (Default settings: 25GB disk, 2GB RAM, 1 CPU Core, DHCP)"
+    echo "2) Customized Installation"
+    read -p "Enter your choice (1 or 2): " INSTALL_CHOICE
+fi
+
 case $INSTALL_CHOICE in
     1)
         echo "Proceeding with Fast Installation..."
@@ -54,18 +74,24 @@ case $INSTALL_CHOICE in
         ;;
     2)
         echo "Proceeding with Customized Installation..."
-        if [ -z "$DISK_SIZE" ] || [ -z "$MEMORY" ] || [ -z "$CORES" ] || [ -z "$NET_MODE" ]; then
-            echo "Error: Customized installation parameters must be provided."
-            exit 1
+        if [ -z "$DISK_SIZE" ]; then
+            read -p "Enter disk size in G(e.g., 25): " DISK_SIZE
         fi
-        disk_size="$DISK_SIZE"
-        memory="$MEMORY"
-        cores="$CORES"
-        net_mode="$NET_MODE"
-        if [ "$net_mode" == "static" ]; then
-            if [ -z "$IPV4" ] || [ -z "$GW" ]; then
-                echo "Error: IPv4 address and gateway must be provided for static network mode."
-                exit 1
+        if [ -z "$MEMORY" ]; then
+            read -p "Enter memory size in MB (e.g., 2048): " MEMORY
+        fi
+        if [ -z "$CORES" ]; then
+            read -p "Enter number of CPU cores (e.g., 1): " CORES
+        fi
+        if [ -z "$NET_MODE" ]; then
+            read -p "Enter network mode (dhcp or static): " NET_MODE
+        fi
+        if [ "$NET_MODE" == "static" ]; then
+            if [ -z "$IPV4" ]; then
+                read -p "Enter IPv4 address (e.g., 192.168.1.100/24): " IPV4
+            fi
+            if [ -z "$GW" ]; then
+                read -p "Enter gateway (e.g., 192.168.1.1): " GW
             fi
         fi
         ;;
@@ -76,10 +102,10 @@ case $INSTALL_CHOICE in
 esac
 
 # Create the LXC container with the specified name
-if [ "$net_mode" == "dhcp" ]; then
-    pct create $LXC_ID $template --hostname $LXC_NAME --password $ROOT_PASSWORD --cores $cores --memory $memory --rootfs local-lvm:${disk_size} --net0 name=eth0,bridge=vmbr0,ip=dhcp
+if [ "$NET_MODE" == "dhcp" ]; then
+    pct create $LXC_ID $template --hostname $LXC_NAME --password $ROOT_PASSWORD --cores $cores --memory $memory --rootfs local-lvm:${DISK_SIZE} --net0 name=eth0,bridge=vmbr0,ip=dhcp
 else
-    pct create $LXC_ID $template --hostname $LXC_NAME --password $ROOT_PASSWORD --cores $cores --memory $memory --rootfs local-lvm:${disk_size} --net0 name=eth0,bridge=vmbr0,ip=$IPV4,gw=$GW
+    pct create $LXC_ID $template --hostname $LXC_NAME --password $ROOT_PASSWORD --cores $cores --memory $memory --rootfs local-lvm:${DISK_SIZE} --net0 name=eth0,bridge=vmbr0,ip=$IPV4,gw=$GW
 fi
 
 # Start the container
