@@ -20,6 +20,16 @@ else
     pause 2
 fi
 
+# Create node_exporter user if it doesn't exist
+if id "node_exporter" &>/dev/null; then
+    echo "User node_exporter already exists."
+    pause 2
+else
+    sudo useradd -rs /bin/false node_exporter
+    echo "User node_exporter created."
+    pause 2
+fi
+
 # Download and extract node_exporter
 echo "Downloading Node Exporter..."
 cd /tmp
@@ -42,16 +52,6 @@ if [ $? -eq 0 ]; then
 else
     echo "Failed to move Node Exporter to /usr/local/bin."
     exit 1
-fi
-
-# Create node_exporter user if it doesn't exist
-if id "node_exporter" &>/dev/null; then
-    echo "User node_exporter already exists."
-    pause 2
-else
-    sudo useradd -rs /bin/false node_exporter
-    echo "User node_exporter created."
-    pause 2
 fi
 
 # Create systemd service file for node_exporter
